@@ -1,0 +1,282 @@
+--[[ 
+    🌟 UNIVERSAL ROBLOX DUMPER & DECOMPILER 🌟
+    Modern UI | English Version
+    Compatible with: Delta, Xeno, Wave, etc.
+]]
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 📁 Configuration
+local MainFolder = "Roblox_Universal_Dump"
+if not isfolder(MainFolder) then makefolder(MainFolder) end
+
+local function sanitizeFileName(name)
+    return name:gsub("[/\\:*?\"<>|]", "_")
+end
+
+-- 🖥️ Create UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "UniversalDumperUI"
+ScreenGui.ResetOnSpawn = false
+if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = CoreGui end
+
+-- 🌑 Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 360, 0, 440)
+MainFrame.Position = UDim2.new(0.5, -180, 0.5, -220)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(60, 60, 80)
+UIStroke.Thickness = 1.5
+UIStroke.Parent = MainFrame
+
+-- 🏷️ Title Bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 50)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+TitleBar.BackgroundTransparency = 0.5
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Size = UDim2.new(1, -20, 1, 0)
+TitleText.Position = UDim2.new(0, 15, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "🛠️ Universal Roblox Dumper"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 18
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Parent = TitleBar
+
+-- 📜 Scroll Frame for Toggles
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Size = UDim2.new(1, -30, 0, 220)
+ScrollFrame.Position = UDim2.new(0, 15, 0, 65)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 240)
+ScrollFrame.ScrollBarThickness = 3
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 150)
+ScrollFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.Parent = ScrollFrame
+
+-- 🎛️ Function to create Modern Toggles
+local function createToggle(text, defaultState)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Size = UDim2.new(1, -5, 0, 40)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Parent = ScrollFrame
+
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 8)
+    ToggleCorner.Parent = ToggleFrame
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -60, 1, 0)
+    Label.Position = UDim2.new(0, 15, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = ToggleFrame
+
+    local SwitchBg = Instance.new("Frame")
+    SwitchBg.Size = UDim2.new(0, 40, 0, 22)
+    SwitchBg.Position = UDim2.new(1, -50, 0.5, -11)
+    SwitchBg.BackgroundColor3 = defaultState and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 70)
+    SwitchBg.Parent = ToggleFrame
+    
+    local SwitchCorner = Instance.new("UICorner")
+    SwitchCorner.CornerRadius = UDim.new(1, 0)
+    SwitchCorner.Parent = SwitchBg
+
+    local SwitchKnob = Instance.new("Frame")
+    SwitchKnob.Size = UDim2.new(0, 18, 0, 18)
+    SwitchKnob.Position = defaultState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+    SwitchKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SwitchKnob.Parent = SwitchBg
+
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0)
+    KnobCorner.Parent = SwitchKnob
+
+    local state = defaultState
+    local clickArea = Instance.new("TextButton")
+    clickArea.Size = UDim2.new(1, 0, 1, 0)
+    clickArea.BackgroundTransparency = 1
+    clickArea.Text = ""
+    clickArea.Parent = ToggleFrame
+
+    clickArea.MouseButton1Click:Connect(function()
+        state = not state
+        local targetPos = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+        local targetColor = state and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 70)
+        
+        TweenService:Create(SwitchKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = targetPos}):Play()
+        TweenService:Create(SwitchBg, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = targetColor}):Play()
+    end)
+
+    return function() return state end
+end
+
+-- Create Toggles
+local getWorkspace = createToggle("Workspace (Map, Parts, Models)", false)
+local getPlayerGui = createToggle("PlayerGui (UI, HUD, Menus)", true)
+local getReplicated = createToggle("ReplicatedStorage (Assets, Remotes)", true)
+local getLighting = createToggle("Lighting (Light Effects)", false)
+
+-- 📊 Status Bar
+local StatusBar = Instance.new("TextLabel")
+StatusBar.Size = UDim2.new(1, -30, 0, 30)
+StatusBar.Position = UDim2.new(0, 15, 0, 300)
+StatusBar.BackgroundTransparency = 1
+StatusBar.Text = "Status: Ready"
+StatusBar.TextColor3 = Color3.fromRGB(150, 150, 150)
+StatusBar.Font = Enum.Font.GothamMedium
+StatusBar.TextSize = 12
+StatusBar.TextXAlignment = Enum.TextXAlignment.Left
+StatusBar.Parent = MainFrame
+
+-- 🔘 Helper function for Buttons
+local function createButton(text, color, posY)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1, -30, 0, 35)
+    Btn.Position = UDim2.new(0, 15, 0, posY)
+    Btn.BackgroundColor3 = color
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 14
+    Btn.Parent = MainFrame
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 8)
+    BtnCorner.Parent = Btn
+
+    Btn.MouseEnter:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = color:Lerp(Color3.fromRGB(255, 255, 255), 0.2)}):Play()
+    end)
+    Btn.MouseLeave:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = color}):Play()
+    end)
+
+    return Btn
+end
+
+-- 1. Save Instance Button
+local BtnSaveMap = createButton("💾 1. Save Instance (.rbxm)", Color3.fromRGB(0, 120, 200), 340)
+BtnSaveMap.MouseButton1Click:Connect(function()
+    if not saveinstance then
+        StatusBar.Text = "Status: ❌ Executor doesn't support saveinstance."
+        StatusBar.TextColor3 = Color3.fromRGB(255, 80, 80)
+        return
+    end
+    
+    StatusBar.Text = "Status: Saving instance... (Please wait)"
+    StatusBar.TextColor3 = Color3.fromRGB(255, 200, 50)
+    
+    local options = {
+        Mode = "Optimized",
+        SavePlayerGui = getPlayerGui(),
+        SaveWorkspace = getWorkspace(),
+        SaveReplicatedStorage = getReplicated(),
+        SaveLighting = getLighting(),
+        IgnoreDefaultClasses = true,
+        IsolateStarterGui = true,
+    }
+    
+    task.wait(0.2)
+    saveinstance(options)
+    
+    StatusBar.Text = "Status: ✅ Saved to Executor folder!"
+    StatusBar.TextColor3 = Color3.fromRGB(0, 255, 100)
+end)
+
+-- 2. Dump Scripts Button
+local BtnDumpScripts = createButton("📜 2. Decompile Scripts (.luau)", Color3.fromRGB(200, 50, 50), 385)
+BtnDumpScripts.MouseButton1Click:Connect(function()
+    if not writefile or not getscriptbytecode then
+        StatusBar.Text = "Status: ❌ Executor lacks write/decompile support."
+        StatusBar.TextColor3 = Color3.fromRGB(255, 80, 80)
+        return
+    end
+    
+    StatusBar.Text = "Status: Extracting... (Do not close)"
+    StatusBar.TextColor3 = Color3.fromRGB(255, 200, 50)
+    
+    local function scanAndDump(container, folderName)
+        local dumpFolder = MainFolder .. "/" .. folderName
+        if not isfolder(dumpFolder) then makefolder(dumpFolder) end
+        
+        local count = 0
+        for _, obj in pairs(container:GetDescendants()) do
+            if obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
+                local success, bytecode = pcall(function()
+                    return getscriptbytecode(obj)
+                end)
+                
+                if success and bytecode and bytecode ~= "" then
+                    local safeName = sanitizeFileName(obj.Name)
+                    local fileName = dumpFolder .. "/" .. safeName .. "_" .. math.random(1000, 9999) .. ".luau"
+                    writefile(fileName, bytecode)
+                    count = count + 1
+                end
+            end
+        end
+        return count
+    end
+
+    local totalDumped = 0
+    if getPlayerGui() then totalDumped = totalDumped + scanAndDump(PlayerGui, "PlayerGui") end
+    if getReplicated() then totalDumped = totalDumped + scanAndDump(ReplicatedStorage, "ReplicatedStorage") end
+    if getWorkspace() then totalDumped = totalDumped + scanAndDump(Workspace, "Workspace") end
+    if getLighting() then totalDumped = totalDumped + scanAndDump(Lighting, "Lighting") end
+
+    StatusBar.Text = "Status: ✅ Success! " .. totalDumped .. " scripts saved."
+    StatusBar.TextColor3 = Color3.fromRGB(0, 255, 100)
+end)
+
+-- 3. Open DeX Button
+local BtnDex = createButton("🕵️ 3. Open DeX Explorer", Color3.fromRGB(100, 180, 100), 430) -- Note: adjust position if needed, may overlap status bar, changing to 430 and resizing frame
+MainFrame.Size = UDim2.new(0, 360, 0, 490) -- Resize frame to fit new button
+BtnDex.Position = UDim2.new(0, 15, 0, 430)
+StatusBar.Position = UDim2.new(0, 15, 0, 475)
+
+BtnDex.MouseButton1Click:Connect(function()
+    StatusBar.Text = "Status: Loading DeX..."
+    StatusBar.TextColor3 = Color3.fromRGB(255, 200, 50)
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
+        StatusBar.Text = "Status: DeX Loaded."
+        StatusBar.TextColor3 = Color3.fromRGB(0, 255, 100)
+    end)
+end)
